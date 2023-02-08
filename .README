@@ -1,0 +1,69 @@
+Pre-installations:
+    Docker         #Container runtime engine.
+    AWS CLI        #To connect with AWS resources.
+    K9S            #Tool to monitor kubernetes resources.
+    eksctl         #Tool to deploy kubernetes cluster.
+    kubectl        #To connect to kubernetes cluster.
+
+Wordpress with DOCKER.
+  step-1 
+    Start docker engine and run below commands.
+
+    docker run --name mysql -e MYSQL_ROOT_PASSWORD=mysqlmysql -p 3306:3306 -d mysql:latest
+    docker run --name test-wordpress-container -p 8080:80 cyberdunes/wordpress:latest
+
+    docker network create --attachable wp-network  # --attachable lets you add containers manually to this network.
+    docker network connect wp-network test-wordpress-container
+    docker network connect wp-network mysql
+
+  step-2 
+    Go to browser, Search localhost:8080
+    Database connection page appears enter credentials. 
+         DB HOST -> <mysql container name>
+
+
+Wordpress with Kubernetes(AWS EKS).
+  step-1 -> Install kubernetes cluster.
+    AWS EKS is used. ./eks-cluster-config/eks-cluster-config.yaml file is for cluster deployment.
+    Command: eksctl create cluster -f ./eks-cluster-config/eks-cluster-config.yaml 
+  
+  step-2 -> Switch to cluster context.
+    Command: aws eks update-kubeconfig --name <cluster_name> --region <cluster_region> --profile <aws_cli_profile>
+  
+  step-3 -> Create persistent volumes and persistent volume claims.
+    Command: kubectl apply -f ./volumes/
+
+  step-3 -> Deploy mysql as deployment, related secret and its service.
+    Command: kubectl apply -f ./mysql-config/
+
+  step-4 -> Deploy wordpress as deployment and its service.
+    Command: kubectl apply -f ./wordpress-config/
+
+  step-5 -> Deploy phpmyadmin as deployment and its service.
+    Command: kubectl apply -f ./phpmyadmin-config/
+
+  step-6 -> Install Kong ingress controller.
+    Command: kubectl create -f https://raw.githubusercontent.com/Kong/kubernetes-ingress-controller/v2.8.0/deploy/single/all-in-one-dbless.yaml.
+
+  step-7 -> Create ingress resource.
+    Command: kubectl apply -f ./kong-gateway/
+
+  Wordpress kubernetes installation complete.
+  To access wordpress in browser execute below command. Get load balancer DNS name. Request from browser.
+  Command: kubectl get ingress 
+
+  Open Issues:
+  When you login if you redirect to same page, Below options might be the issue. Go inside wordpress container to location /var/www/html/wp-content.php/
+  Option-1 Remove .htaccess hidden file.
+  (OR)
+  Option-2 Rename plugins folder.
+  (OR)
+  Option-3 Go inside themes folder and rename theme.
+
+EOF
+
+    
+
+
+         
+    

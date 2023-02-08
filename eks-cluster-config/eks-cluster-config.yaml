@@ -1,0 +1,27 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: "wordpress" #update environment here
+  region: "us-east-2"
+  version: "1.23"
+vpc:
+  autoAllocateIPv6: false
+  cidr: "10.176.9.0/24"
+  clusterEndpoints:
+    privateAccess: true # Worker nodes to control plane API server
+    publicAccess: true # Client kubectl to control plane API server
+  #publicAccessCIDRs: ["3.64.145.192/32", "3.64.17.74/32"] # AWS VPN CIDRs
+  manageSharedNodeSecurityGroupRules: true
+kubernetesNetworkConfig:
+  serviceIPv4CIDR: "172.21.0.0/16"
+iam:
+  withOIDC: true
+managedNodeGroups:
+  - name: "wordpress-nodegroup-1"
+    privateNetworking: true #Private IPs only & to use private subnets only
+    instanceType: "t3.medium"
+    desiredCapacity: 3
+    volumeSize: 50
+    ssh:
+      publicKeyName: "test"
